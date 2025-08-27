@@ -1,0 +1,45 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: "solicitudes"
+
+  r2dbc:
+    pool:
+      enabled: false
+  devtools:
+    add-properties: false
+adapters:
+  r2dbc:
+    host: "${MYSQL_HOST:localhost}"
+    port: "${MYSQL_PORT:3306}"
+    database: "${MYSQL_DATABASE:solicitudes}"
+    username: "${MYSQL_USER:myuser}"
+    password: "${MYSQL_PASSWORD:mypassword}"
+    ssl-enabled: "${MYSQL_SSL_ENABLED:true}"
+routes:
+  paths:
+    solicitar: "/api/v1/solicitudes"
+
+  profiles:
+    include: null
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,prometheus"
+  endpoint:
+    health:
+      probes:
+        enabled: true
+cors:
+  allowed-origins: "http://localhost:4200,http://localhost:8080"
+
+springdoc:
+  swagger-ui:
+    url: /v3/api-docs
+    path: /swagger-ui.html
+    enabled: true
+    disable-swagger-default-url: true
+    config-url: /v3/api-docs/swagger-config
+    urls-primary-name: Mi API
