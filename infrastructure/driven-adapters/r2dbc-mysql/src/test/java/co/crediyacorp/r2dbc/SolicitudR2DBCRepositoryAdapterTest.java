@@ -32,6 +32,7 @@ class SolicitudR2DBCRepositoryAdapterTest {
     @Mock
     ObjectMapper mapper;
 
+
     private SolicitudEntity entity;
     private Solicitud model;
 
@@ -39,11 +40,11 @@ class SolicitudR2DBCRepositoryAdapterTest {
     void setUp() {
         entity = new SolicitudEntity();
         entity.setIdSolicitud("1");
-        entity.setDocumetoIdentidad("123456");
+        entity.setDocumentoIdentidad("123456");
 
         model = new Solicitud();
         model.setIdSolicitud("1");
-        model.setDocumetoIdentidad("123456");
+        model.setDocumentoIdentidad("123456");
     }
 
     @Test

@@ -1,7 +1,7 @@
 package co.crediyacorp.api.config.manejoexcepciones;
 
 
-import co.crediyacorp.usecase.crearsolicitud.excepciones.ValidationException;
+import co.crediyacorp.model.excepciones.ValidationException;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.reactive.error.DefaultErrorAttributes;
 import org.springframework.http.HttpStatus;

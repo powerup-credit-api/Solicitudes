@@ -3,7 +3,7 @@ package co.crediyacorp.usecase.crearsolicitud.usecases;
 import co.crediyacorp.model.estado.gateways.EstadoRepository;
 import co.crediyacorp.model.solicitud.Solicitud;
 import co.crediyacorp.model.solicitud.gateways.SolicitudRepository;
-import co.crediyacorp.usecase.crearsolicitud.excepciones.ValidationException;
+import co.crediyacorp.model.excepciones.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import reactor.core.publisher.Flux;
