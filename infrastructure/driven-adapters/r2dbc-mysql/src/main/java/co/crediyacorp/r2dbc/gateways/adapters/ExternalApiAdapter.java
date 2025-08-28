@@ -1,0 +1,60 @@
+package co.crediyacorp.r2dbc.gateways.adapters;
+
+import co.crediyacorp.model.excepciones.ValidationException;
+import co.crediyacorp.model.external_services.ExternalApiPort;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+
+@Component
+public class ExternalApiAdapter implements ExternalApiPort {
+    private final WebClient webClient;
+
+    public ExternalApiAdapter(WebClient webClient) {
+        this.webClient = webClient;
+    }
+
+
+    @Override
+    public Mono<Boolean> validarUsuario(String email, String documentoIdentidad) {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/v1/validar")
+                        .queryParam("email", email)
+                        .queryParam("documentoIdentidad", documentoIdentidad)
+                        .build())
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, clientResponse ->
+                        clientResponse.bodyToMono(String.class)
+                                .flatMap(this::extraerMensaje)
+                                .flatMap(msg -> Mono.error(new ValidationException(msg)))
+                )
+                .bodyToMono(Boolean.class)
+                .filter(Boolean::booleanValue);
+    }
+
+    private Mono<String> extraerMensaje(String rawJson) {
+        return Mono.justOrEmpty(rawJson)
+                .flatMap(json -> extraerCampo(json, "\"message\":\""))
+                .filter(msg -> !msg.isBlank())
+                .defaultIfEmpty("Error desconocido");
+    }
+
+
+    private Mono<String> extraerCampo(String json, String clave) {
+        return Mono.justOrEmpty(json)
+                .map(j -> j.indexOf(clave))
+                .filter(i -> i >= 0)
+                .map(i -> i + clave.length())
+                .flatMap(start ->
+                        Mono.justOrEmpty(json.indexOf("\"", start))
+                                .filter(end -> end > start)
+                                .map(end -> json.substring(start, end))
+                );
+    }
+
+
+
+
+}

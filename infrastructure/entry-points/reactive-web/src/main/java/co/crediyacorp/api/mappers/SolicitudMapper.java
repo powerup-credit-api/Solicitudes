@@ -3,7 +3,7 @@ package co.crediyacorp.api.mappers;
 import co.crediyacorp.api.dtos.SolicitudEntradaDto;
 import co.crediyacorp.model.solicitud.Solicitud;
 import co.crediyacorp.model.tipoprestamo.gateways.TipoPrestamoRepository;
-import co.crediyacorp.usecase.crearsolicitud.excepciones.ValidationException;
+import co.crediyacorp.model.excepciones.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;

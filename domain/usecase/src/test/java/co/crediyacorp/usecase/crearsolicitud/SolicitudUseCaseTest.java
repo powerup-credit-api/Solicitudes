@@ -3,7 +3,7 @@ package co.crediyacorp.usecase.crearsolicitud;
 import co.crediyacorp.model.estado.gateways.EstadoRepository;
 import co.crediyacorp.model.solicitud.Solicitud;
 import co.crediyacorp.model.solicitud.gateways.SolicitudRepository;
-import co.crediyacorp.usecase.crearsolicitud.excepciones.ValidationException;
+import co.crediyacorp.model.excepciones.ValidationException;
 import co.crediyacorp.usecase.crearsolicitud.usecases.SolicitudUseCase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,4 +1,4 @@
-package co.crediyacorp.usecase.crearsolicitud.excepciones;
+package co.crediyacorp.model.excepciones;
 
 public class ValidationException extends RuntimeException {
     public ValidationException(String message) {
