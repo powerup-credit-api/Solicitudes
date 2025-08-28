@@ -12,14 +12,14 @@ spring:
 adapters:
   r2dbc:
     host: "${MYSQL_HOST:localhost}"
-    port: "${MYSQL_PORT:3306}"
+    port: "${MYSQL_PORT:3307}"
     database: "${MYSQL_DATABASE:solicitudes}"
     username: "${MYSQL_USER:myuser}"
     password: "${MYSQL_PASSWORD:mypassword}"
     ssl-enabled: "${MYSQL_SSL_ENABLED:true}"
 routes:
   paths:
-    solicitar: "/api/v1/solicitudes"
+    solicitar: "/api/v1/solicitud"
 
   profiles:
     include: null
