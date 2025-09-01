@@ -15,6 +15,8 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+
 
 @Component
 @RequiredArgsConstructor
@@ -27,6 +29,12 @@ public class Handler {
 
     public Mono<ServerResponse> listenCrearSolicitud(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(SolicitudEntradaDto.class)
+                .flatMap(dto ->
+                        Objects.equals(serverRequest.headers().firstHeader("X-USER-SUBJECT"), dto.email()) ?
+                                Mono.just(dto) :
+                                Mono.error(new ValidationException("El email no coincide con el usuario autenticado"))
+
+                )
                 .flatMap(dto -> externalApiPortUseCase.validarUsuario(dto.email(), dto.documentoIdentidad())
                         .filter(Boolean::booleanValue)
                         .switchIfEmpty(Mono.error(new ValidationException("Usuario no válido")))
@@ -35,7 +43,6 @@ public class Handler {
                 )
                 .flatMap(solicitud -> ServerResponse.ok().bodyValue(solicitud));
     }
-
 
 
 }
