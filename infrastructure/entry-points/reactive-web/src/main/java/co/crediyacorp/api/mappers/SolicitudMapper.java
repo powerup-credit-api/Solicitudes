@@ -1,6 +1,8 @@
 package co.crediyacorp.api.mappers;
 
+import co.crediyacorp.api.dtos.RespuestaDto;
 import co.crediyacorp.api.dtos.SolicitudEntradaDto;
+import co.crediyacorp.model.estado.gateways.EstadoRepository;
 import co.crediyacorp.model.solicitud.Solicitud;
 import co.crediyacorp.model.tipoprestamo.gateways.TipoPrestamoRepository;
 import co.crediyacorp.model.excepciones.ValidationException;
@@ -12,6 +14,7 @@ import reactor.core.publisher.Mono;
 @Component
 public class SolicitudMapper {
     private final TipoPrestamoRepository tipoPrestamoRepository;
+    private final EstadoRepository estadoRepository;
 
     public Mono<Solicitud> toDomain(SolicitudEntradaDto entradaDto) {
         return tipoPrestamoRepository.existeTipoPrestamoPorNombre(
@@ -30,6 +33,21 @@ public class SolicitudMapper {
                 );
     }
 
+    public Mono<RespuestaDto> toResponse(Solicitud solicitud) {
+        return Mono.zip(
+                estadoRepository.obtenerNombreEstadoPorId(solicitud.getIdEstado()),
+                tipoPrestamoRepository.obtenerNombreTipoPrestamoPorId(solicitud.getIdTipoPrestamo())
+        ).map(tuple -> new RespuestaDto(
+                solicitud.getIdSolicitud(),
+                solicitud.getDocumentoIdentidad(),
+                solicitud.getEmail(),
+                solicitud.getFechaCreacion(),
+                solicitud.getMonto(),
+                solicitud.getPlazo(),
+                tuple.getT2(),
+                tuple.getT1()
+        ));
+    }
 
 
 

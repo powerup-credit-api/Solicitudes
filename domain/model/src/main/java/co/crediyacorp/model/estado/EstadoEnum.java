@@ -1,8 +1,8 @@
 package co.crediyacorp.model.estado;
 
 public enum EstadoEnum {
-    ACTIVO,
-    INACTIVO,
+    APROBADO,
+    RECHAZADO,
     PENDIENTE_DE_REVISION,
-    SUSPENDIDO
+    REVISION_MANUAL
 }

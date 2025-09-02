@@ -4,23 +4,28 @@ import co.crediyacorp.model.estado.gateways.EstadoRepository;
 import co.crediyacorp.model.solicitud.Solicitud;
 import co.crediyacorp.model.solicitud.gateways.SolicitudRepository;
 import co.crediyacorp.model.excepciones.ValidationException;
+import co.crediyacorp.model.tipoprestamo.gateways.TipoPrestamoRepository;
 import co.crediyacorp.usecase.crearsolicitud.usecases.SolicitudUseCase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import static org.mockito.Mockito.*;
+
 @ExtendWith(MockitoExtension.class)
 class SolicitudUseCaseTest {
 
@@ -29,6 +34,9 @@ class SolicitudUseCaseTest {
 
     @Mock
     private EstadoRepository estadoRepository;
+
+    @Mock
+    private TipoPrestamoRepository tipoPrestamoRepository;
 
     @InjectMocks
     private SolicitudUseCase solicitudUseCase;
@@ -47,8 +55,14 @@ class SolicitudUseCaseTest {
     void crearSolicitud_exitoso() {
         Solicitud solicitud = buildSolicitudValida();
 
+        when(tipoPrestamoRepository.tieneValidacionManual(solicitud.getIdTipoPrestamo()))
+                .thenReturn(Mono.just(false));
+
         when(estadoRepository.obtenerIdEstadoPorNombre("PENDIENTE_DE_REVISION"))
                 .thenReturn(Mono.just("c1f2e110-3a4b-4d2c-8b2f-5f6a7c8d9e10"));
+        when(estadoRepository.obtenerIdEstadoPorNombre("REVISION_MANUAL"))
+                .thenReturn(Mono.just("otro-estado"));
+
         when(solicitudRepository.guardarSolicitud(any(Solicitud.class)))
                 .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
@@ -61,15 +75,15 @@ class SolicitudUseCaseTest {
                 })
                 .verifyComplete();
 
+        verify(tipoPrestamoRepository).tieneValidacionManual(solicitud.getIdTipoPrestamo());
         verify(estadoRepository).obtenerIdEstadoPorNombre("PENDIENTE_DE_REVISION");
+        verify(estadoRepository).obtenerIdEstadoPorNombre("REVISION_MANUAL");
         verify(solicitudRepository).guardarSolicitud(any(Solicitud.class));
     }
 
+
     @Test
     void crearSolicitud_errorPorCampoVacio() {
-        when(estadoRepository.obtenerIdEstadoPorNombre(anyString()))
-                .thenReturn(Mono.just("c1f2e110-3a4b-4d2c-8b2f-5f6a7c8d9e10"));
-
         Solicitud solicitud = buildSolicitudValida().toBuilder()
                 .documentoIdentidad(null)
                 .build();
@@ -81,25 +95,109 @@ class SolicitudUseCaseTest {
                 )
                 .verify();
 
-        verifyNoInteractions(solicitudRepository);
+        verifyNoInteractions(tipoPrestamoRepository, estadoRepository, solicitudRepository);
     }
+
     @Test
     void crearSolicitud_errorEnGuardarSolicitud() {
         Solicitud solicitud = buildSolicitudValida();
 
+        // pasa validaciones
+        when(tipoPrestamoRepository.tieneValidacionManual(solicitud.getIdTipoPrestamo()))
+                .thenReturn(Mono.just(false));
+
         when(estadoRepository.obtenerIdEstadoPorNombre("PENDIENTE_DE_REVISION"))
                 .thenReturn(Mono.just("c1f2e110-3a4b-4d2c-8b2f-5f6a7c8d9e10"));
+        when(estadoRepository.obtenerIdEstadoPorNombre("REVISION_MANUAL"))
+                .thenReturn(Mono.just("otro-uuid"));
+
+        // aquí simulamos el fallo en DB
         when(solicitudRepository.guardarSolicitud(any(Solicitud.class)))
-                .thenReturn(Mono.error(new RuntimeException("DB error")));
+                .thenReturn(Mono.error(new ValidationException("DB error")));
 
         StepVerifier.create(solicitudUseCase.crearSolicitud(solicitud))
                 .expectErrorMatches(throwable ->
-                        throwable instanceof RuntimeException &&
+                        throwable instanceof ValidationException &&
                                 throwable.getMessage().equals("DB error")
                 )
                 .verify();
 
+        verify(tipoPrestamoRepository).tieneValidacionManual(solicitud.getIdTipoPrestamo());
         verify(estadoRepository).obtenerIdEstadoPorNombre("PENDIENTE_DE_REVISION");
         verify(solicitudRepository).guardarSolicitud(any(Solicitud.class));
     }
+
+
+    @Test
+    void obtenerSolicitudesPendientes_exitoso() {
+        Solicitud solicitud1 = buildSolicitudValida().toBuilder()
+                .idSolicitud(UUID.randomUUID().toString())
+                .build();
+        Solicitud solicitud2 = buildSolicitudValida().toBuilder()
+                .idSolicitud(UUID.randomUUID().toString())
+                .build();
+
+        when(estadoRepository.obtenerIdEstadoPorNombre("PENDIENTE_DE_REVISION"))
+                .thenReturn(Mono.just("id-estado-1"));
+        when(estadoRepository.obtenerIdEstadoPorNombre("RECHAZADO"))
+                .thenReturn(Mono.just("id-estado-2"));
+        when(estadoRepository.obtenerIdEstadoPorNombre("REVISION_MANUAL"))
+                .thenReturn(Mono.just("id-estado-3"));
+
+        when(solicitudRepository.obtenerSolicitudesPendientes(
+                anyList(), anyInt(), anyInt(), any(), anyString()
+        )).thenReturn(Flux.just(solicitud1, solicitud2));
+
+        StepVerifier.create(solicitudUseCase.obtenerSolicitudesPendientes(0, 10, null, "DESC"))
+                .expectNext(solicitud1)
+                .expectNext(solicitud2)
+                .verifyComplete();
+
+        verify(estadoRepository).obtenerIdEstadoPorNombre("PENDIENTE_DE_REVISION");
+        verify(estadoRepository).obtenerIdEstadoPorNombre("RECHAZADO");
+        verify(estadoRepository).obtenerIdEstadoPorNombre("REVISION_MANUAL");
+        verify(solicitudRepository).obtenerSolicitudesPendientes(
+                List.of("id-estado-1", "id-estado-2", "id-estado-3"),
+                0, 10, null, "DESC"
+        );
+    }
+
+    @Test
+    void obtenerSolicitudesPendientes_sinSortDirectionUsaAscPorDefecto() {
+        Solicitud solicitud = buildSolicitudValida();
+
+        when(estadoRepository.obtenerIdEstadoPorNombre(anyString()))
+                .thenReturn(Mono.just("id-estado"));
+
+        when(solicitudRepository.obtenerSolicitudesPendientes(
+                anyList(), anyInt(), anyInt(), any(), anyString()
+        )).thenReturn(Flux.just(solicitud));
+
+        StepVerifier.create(solicitudUseCase.obtenerSolicitudesPendientes(1, 5, BigDecimal.valueOf(1000), null))
+                .expectNext(solicitud)
+                .verifyComplete();
+
+        verify(solicitudRepository).obtenerSolicitudesPendientes(
+                anyList(), eq(1), eq(5), eq(BigDecimal.valueOf(1000)), eq("ASC")
+        );
+    }
+
+    @Test
+    void obtenerSolicitudesPendientes_errorEnEstadoRepository() {
+        when(estadoRepository.obtenerIdEstadoPorNombre("PENDIENTE_DE_REVISION"))
+                .thenReturn(Mono.error(new RuntimeException("Error al obtener estado")));
+        when(estadoRepository.obtenerIdEstadoPorNombre("RECHAZADO"))
+                .thenReturn(Mono.just("2"));
+        when(estadoRepository.obtenerIdEstadoPorNombre("REVISION_MANUAL"))
+                .thenReturn(Mono.just("3"));
+
+        StepVerifier.create(solicitudUseCase.obtenerSolicitudesPendientes(0, 10, null, "ASC"))
+                .expectErrorMatches(throwable ->
+                        throwable instanceof RuntimeException &&
+                                "Error al obtener estado".equals(throwable.getMessage())
+                )
+                .verify();
+
+    }
+
 }
