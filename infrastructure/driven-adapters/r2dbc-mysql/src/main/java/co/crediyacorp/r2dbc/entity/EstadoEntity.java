@@ -12,7 +12,7 @@ import org.springframework.data.relational.core.mapping.Table;
 @NoArgsConstructor
 
 @Table("estado")
-public class EstadoEnity {
+public class EstadoEntity {
 
     @Id
     @Column("id_estado")

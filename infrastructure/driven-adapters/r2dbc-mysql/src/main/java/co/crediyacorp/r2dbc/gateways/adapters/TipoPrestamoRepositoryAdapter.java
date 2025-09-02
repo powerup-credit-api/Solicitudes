@@ -30,4 +30,17 @@ public class TipoPrestamoRepositoryAdapter extends ReactiveAdapterOperations<
     public Mono<Boolean> existeTipoPrestamoPorNombre(String nombre) {
         return repository.existsByNombre(nombre);
     }
+
+    @Override
+    public Mono<Boolean> tieneValidacionManual(String idTipoPrestamo) {
+        return repository.findByIdTipoPrestamoAndValidacionAutomaticaFalse(idTipoPrestamo)
+                .hasElement();
+    }
+
+    @Override
+    public Mono<String> obtenerNombreTipoPrestamoPorId(String idTipoPrestamo) {
+        return repository.findNombreByIdTipoPrestamo(idTipoPrestamo);
+    }
+
+
 }

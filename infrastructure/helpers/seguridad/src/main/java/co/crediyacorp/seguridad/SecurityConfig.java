@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
@@ -30,7 +31,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/swagger-ui/index.html").permitAll()
-                        .pathMatchers("/api/v1/solicitud").hasAnyRole("ADMINISTRADOR", "SOLICITANTE","ASESOR")
+                        .pathMatchers(HttpMethod.POST,"/api/v1/solicitud").hasAnyRole("ADMINISTRADOR", "SOLICITANTE","ASESOR")
+                        .pathMatchers(HttpMethod.GET,"/api/v1/solicitud").hasAnyRole("ADMINISTRADOR", "ASESOR")
                         .anyExchange().authenticated()
                 )
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)

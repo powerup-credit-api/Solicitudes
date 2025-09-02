@@ -19,7 +19,7 @@ adapters:
     ssl-enabled: "${MYSQL_SSL_ENABLED:true}"
 routes:
   paths:
-    solicitar: "/api/v1/solicitud"
+    solicitud: "/api/v1/solicitud"
 
   profiles:
     include: null
