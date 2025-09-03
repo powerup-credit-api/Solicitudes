@@ -11,5 +11,6 @@ import java.util.List;
 public interface SolicitudRepository {
 
     Mono<Solicitud> guardarSolicitud(Solicitud solicitud);
-    Flux<Solicitud> obtenerSolicitudesPendientes(List<String> estados, Integer page, Integer size, BigDecimal monto, String sortDirection);
+    Flux<Solicitud> obtenerSolicitudesPorEstadoAprobado(String idEstado);
+    Flux<Solicitud> obtenerSolicitudesPendientes(List<String> estados, Integer page, Integer size, BigDecimal monto, String sortDirection,String estadoId);
 }

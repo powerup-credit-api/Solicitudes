@@ -7,6 +7,8 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
+
 @Repository
 public interface TipoPrestamoR2DBCRepository extends ReactiveCrudRepository<TipoPrestamoEntity, String>, ReactiveQueryByExampleExecutor<TipoPrestamoEntity> {
 
@@ -16,6 +18,9 @@ public interface TipoPrestamoR2DBCRepository extends ReactiveCrudRepository<Tipo
 
     @Query("SELECT nombre FROM tipo_prestamo WHERE id_tipo_prestamo = :idTipoPrestamo")
     Mono<String> findNombreByIdTipoPrestamo(String idTipoPrestamo);
+
+    @Query("SELECT tasa_interes FROM tipo_prestamo WHERE id_tipo_prestamo = :idTipoPrestamo")
+    Mono<BigDecimal> findTasaInteresByIdTipoPrestamo(String idTipoPrestamo);
 
 
 

@@ -11,6 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -47,11 +48,13 @@ public class SolicitudUseCase {
                 .doOnError(e -> log.severe("Error al crear la solicitud: " + e.getMessage()));
     }
 
-    public Flux<Solicitud> obtenerSolicitudesPendientes(Integer page, Integer size, BigDecimal monto, String sortDirection) {
+    public Flux<Solicitud> obtenerSolicitudesPendientes(Integer page, Integer size, BigDecimal monto, String sortDirection,String nombreEstado) {
         return Mono.zip(
                         estadoRepository.obtenerIdEstadoPorNombre("PENDIENTE_DE_REVISION"),
                         estadoRepository.obtenerIdEstadoPorNombre("RECHAZADO"),
-                        estadoRepository.obtenerIdEstadoPorNombre("REVISION_MANUAL")
+                        estadoRepository.obtenerIdEstadoPorNombre("REVISION_MANUAL"),
+                        nombreEstado != null ? estadoRepository.obtenerIdEstadoPorNombre(nombreEstado)
+                                : Mono.just("")
                 )
                 .flatMapMany(tuple ->
                         solicitudRepository.obtenerSolicitudesPendientes(
@@ -60,10 +63,24 @@ public class SolicitudUseCase {
                                 size,
                                 monto,
                                 Optional.ofNullable(sortDirection).orElse("ASC")
+                                ,tuple.getT4()
+
                         )
                 )
                 .doOnError(e -> log.severe("Error al obtener solicitudes pendientes: " + e.getMessage()))
                 .doOnComplete(() -> log.info("Obtencion de solicitudes pendientes completada"));
+    }
+
+    public Mono<BigDecimal> obtenerDeudaMensualAprobada(){
+        return estadoRepository.obtenerIdEstadoPorNombre("APROBADO")
+                .flatMap(estadoAprobadoId -> solicitudRepository.obtenerSolicitudesPorEstadoAprobado(estadoAprobadoId)
+                        .map(solicitud ->
+                            solicitud.getMonto().divide(new BigDecimal(solicitud.getPlazo()), RoundingMode.HALF_UP))
+                        .reduce(BigDecimal::add)
+                        .defaultIfEmpty(BigDecimal.ZERO)
+                )
+                .doOnError(e -> log.severe("Error al obtener la deuda mensual aprobada: " + e.getMessage()))
+                .doOnSuccess(deudaMensual -> log.info("Deuda mensual aprobada calculada correctamente: " + deudaMensual));
     }
 
 

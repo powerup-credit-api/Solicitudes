@@ -9,6 +9,12 @@ import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 @Repository
 public class TipoPrestamoRepositoryAdapter extends ReactiveAdapterOperations<
         TipoPrestamo,
@@ -16,18 +22,27 @@ public class TipoPrestamoRepositoryAdapter extends ReactiveAdapterOperations<
     String,
         TipoPrestamoR2DBCRepository
 > implements TipoPrestamoRepository {
+
+
+    private final Map<String, Mono<String>>tipoPrestamoCacheIdNombre;
+    private final Map<String, Mono<BigDecimal>>tasaInteresCacheIdTipoPrestamo;
     public TipoPrestamoRepositoryAdapter(TipoPrestamoR2DBCRepository repository, ObjectMapper mapper) {
 
         super(repository, mapper, d -> mapper.map(d, TipoPrestamo.class));
+        tipoPrestamoCacheIdNombre= new ConcurrentHashMap<>();
+        tasaInteresCacheIdTipoPrestamo= new ConcurrentHashMap<>();
     }
 
     @Override
     public Mono<String> obtenerIdTipoPrestamoPorNombre(String id) {
-        return repository.findIdByNombre(id);
+        return tipoPrestamoCacheIdNombre.computeIfAbsent(id,key ->
+                repository.findIdByNombre(key).cache(Duration.of(10, ChronoUnit.MINUTES))
+        );
     }
 
     @Override
     public Mono<Boolean> existeTipoPrestamoPorNombre(String nombre) {
+
         return repository.existsByNombre(nombre);
     }
 
@@ -39,7 +54,16 @@ public class TipoPrestamoRepositoryAdapter extends ReactiveAdapterOperations<
 
     @Override
     public Mono<String> obtenerNombreTipoPrestamoPorId(String idTipoPrestamo) {
-        return repository.findNombreByIdTipoPrestamo(idTipoPrestamo);
+        return tipoPrestamoCacheIdNombre.computeIfAbsent(idTipoPrestamo,key ->
+            repository.findNombreByIdTipoPrestamo(key).cache(Duration.of(10, ChronoUnit.MINUTES))
+        );
+    }
+
+    @Override
+    public Mono<BigDecimal> obtenerTasaInteresPorIdTipoPrestamo(String idTipoPrestamo) {
+        return tasaInteresCacheIdTipoPrestamo.computeIfAbsent(idTipoPrestamo,key ->
+            repository.findTasaInteresByIdTipoPrestamo(key).cache(Duration.of(10, ChronoUnit.MINUTES))
+        );
     }
 
 

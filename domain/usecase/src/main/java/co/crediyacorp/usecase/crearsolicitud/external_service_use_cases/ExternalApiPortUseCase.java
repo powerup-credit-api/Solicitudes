@@ -4,6 +4,9 @@ import co.crediyacorp.model.external_services.ExternalApiPort;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 @RequiredArgsConstructor
 public class ExternalApiPortUseCase {
 
@@ -12,5 +15,13 @@ public class ExternalApiPortUseCase {
     public Mono<Boolean> validarUsuario(String email, String documentoIdentidad) {
         return externalApiPort.validarUsuario(email, documentoIdentidad);
     }
+
+    public Mono<List<BigDecimal>> consultarSalarios(List<String> empleadosIds) {
+        return externalApiPort.consultarSalarios(empleadosIds);
+    }
+
+
+
+
 
 }

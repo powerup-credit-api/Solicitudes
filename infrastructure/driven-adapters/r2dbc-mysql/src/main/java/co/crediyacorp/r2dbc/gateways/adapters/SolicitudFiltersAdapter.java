@@ -12,11 +12,14 @@ import reactor.core.publisher.Flux;
 import java.math.BigDecimal;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Repository
 @RequiredArgsConstructor
 public class SolicitudFiltersAdapter {
+
     private final R2dbcEntityTemplate template;
 
     public Flux<SolicitudEntity> findAllWithFilters(
@@ -24,19 +27,28 @@ public class SolicitudFiltersAdapter {
             Integer page,
             Integer size,
             BigDecimal monto,
-            String sortDirection
+            String sortDirection,
+            String estadoId
     ) {
         return template.select(SolicitudEntity.class)
                 .matching(
                         Query.query(
-                                        Optional.ofNullable(monto)
-                                                .map(m -> Criteria.where("id_estado").in(estados)
-                                                        .and("monto").is(m))
-                                                .orElse(Criteria.where("id_estado").in(estados))
+                                        Stream.of(
+                                                        Criteria.where("id_estado").in(estados),
+                                                        Optional.ofNullable(monto)
+                                                                .map(m -> Criteria.where("monto").is(m))
+                                                                .orElse(null),
+                                                        (estadoId != null && !estadoId.isBlank() && estados.contains(estadoId))
+                                                                ? Criteria.where("id_estado").is(estadoId)
+                                                                : null
+                                                )
+                                                .filter(Objects::nonNull)
+                                                .reduce(Criteria::and)
+                                                .orElse(Criteria.empty())
                                 )
-                                .sort("DESC".equalsIgnoreCase(sortDirection) ?
-                                        Sort.by("email").descending() :
-                                        Sort.by("email").ascending())
+                                .sort("DESC".equalsIgnoreCase(sortDirection)
+                                        ? Sort.by("email").descending()
+                                        : Sort.by("email").ascending())
                                 .limit(size)
                                 .offset((long) page * size)
                 )

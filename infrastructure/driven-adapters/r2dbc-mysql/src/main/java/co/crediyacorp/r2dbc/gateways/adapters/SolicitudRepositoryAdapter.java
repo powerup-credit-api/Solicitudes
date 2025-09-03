@@ -37,15 +37,23 @@ public class SolicitudRepositoryAdapter extends ReactiveAdapterOperations<
         return super.save(solicitud);
     }
 
+    @Override
+    public Flux<Solicitud> obtenerSolicitudesPorEstadoAprobado(String idEstado) {
+        return repository.findByIdEstado(idEstado)
+                .map(this::toEntity);
+    }
+
 
     @Override
-    public Flux<Solicitud> obtenerSolicitudesPendientes(List<String> estados, Integer page, Integer size, BigDecimal monto, String sortDirection) {
+    public Flux<Solicitud> obtenerSolicitudesPendientes(List<String> estados, Integer page, Integer size, BigDecimal monto, String sortDirection, String estadoId) {
         return filtersAdapter.findAllWithFilters(
                         estados,
                         page,
                         size,
                         monto,
-                        sortDirection
+                        sortDirection,
+                        estadoId
+
                 )
                 .map(this::toEntity);
 }

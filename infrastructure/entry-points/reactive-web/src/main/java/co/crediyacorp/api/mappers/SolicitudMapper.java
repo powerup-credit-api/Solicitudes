@@ -1,6 +1,7 @@
 package co.crediyacorp.api.mappers;
 
 import co.crediyacorp.api.dtos.RespuestaDto;
+import co.crediyacorp.api.dtos.SolicitudPendienteDto;
 import co.crediyacorp.api.dtos.SolicitudEntradaDto;
 import co.crediyacorp.model.estado.gateways.EstadoRepository;
 import co.crediyacorp.model.solicitud.Solicitud;
@@ -9,6 +10,8 @@ import co.crediyacorp.model.excepciones.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+
+import java.math.BigDecimal;
 
 @RequiredArgsConstructor
 @Component
@@ -32,6 +35,29 @@ public class SolicitudMapper {
                         .build()
                 );
     }
+
+
+    public Mono<SolicitudPendienteDto> toSolicitudPendienteDto (Solicitud solicitud, BigDecimal salarioBase, BigDecimal deudaMensualAprobadas) {
+        return Mono.zip(
+                estadoRepository.obtenerNombreEstadoPorId(solicitud.getIdEstado()),
+                tipoPrestamoRepository.obtenerNombreTipoPrestamoPorId(solicitud.getIdTipoPrestamo()),
+                tipoPrestamoRepository.obtenerTasaInteresPorIdTipoPrestamo(solicitud.getIdTipoPrestamo())
+        ).map(tuple -> new SolicitudPendienteDto(
+                solicitud.getIdSolicitud(),
+                solicitud.getDocumentoIdentidad(),
+                solicitud.getEmail(),
+                solicitud.getFechaCreacion(),
+                solicitud.getMonto(),
+                salarioBase,
+                tuple.getT3(),
+                solicitud.getPlazo(),
+                tuple.getT2(),
+                tuple.getT1(),
+                deudaMensualAprobadas
+        ));
+    }
+
+
 
     public Mono<RespuestaDto> toResponse(Solicitud solicitud) {
         return Mono.zip(
