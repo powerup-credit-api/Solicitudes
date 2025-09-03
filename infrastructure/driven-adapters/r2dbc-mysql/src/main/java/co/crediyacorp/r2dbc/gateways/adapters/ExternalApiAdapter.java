@@ -2,10 +2,15 @@ package co.crediyacorp.r2dbc.gateways.adapters;
 
 import co.crediyacorp.model.excepciones.ValidationException;
 import co.crediyacorp.model.external_services.ExternalApiPort;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 
 @Component
 public class ExternalApiAdapter implements ExternalApiPort {
@@ -33,6 +38,24 @@ public class ExternalApiAdapter implements ExternalApiPort {
                 .bodyToMono(Boolean.class)
                 .filter(Boolean::booleanValue);
     }
+
+
+
+    @Override
+    public Mono<List<BigDecimal>> consultarSalarios(List<String> emails) {
+        return webClient.post()
+                .uri("/api/v1/salario")
+                .bodyValue(emails)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, clientResponse ->
+                        clientResponse.bodyToMono(String.class)
+                                .flatMap(this::extraerMensaje)
+                                .flatMap(msg -> Mono.error(new ValidationException(msg)))
+                )
+                .bodyToMono(new ParameterizedTypeReference<List<BigDecimal>>() {})
+                .defaultIfEmpty(Collections.emptyList());
+    }
+
 
     private Mono<String> extraerMensaje(String rawJson) {
         return Mono.justOrEmpty(rawJson)
