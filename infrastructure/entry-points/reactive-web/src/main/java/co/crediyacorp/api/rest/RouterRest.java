@@ -2,7 +2,7 @@ package co.crediyacorp.api.rest;
 
 import co.crediyacorp.api.config.SolicitudPath;
 import co.crediyacorp.api.dtos.SolicitudEntradaDto;
-import co.crediyacorp.api.dtos.SolicitudPendienteDto;
+import co.crediyacorp.model.solicitud.SolicitudPendienteDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
