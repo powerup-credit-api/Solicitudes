@@ -2,9 +2,12 @@ package co.crediyacorp.usecase.crearsolicitud.usecases;
 
 import co.crediyacorp.model.estado.gateways.EstadoRepository;
 import co.crediyacorp.model.solicitud.Solicitud;
+import co.crediyacorp.model.solicitud.SolicitudPendienteDto;
 import co.crediyacorp.model.solicitud.gateways.SolicitudRepository;
 import co.crediyacorp.model.excepciones.ValidationException;
 import co.crediyacorp.model.tipoprestamo.gateways.TipoPrestamoRepository;
+import co.crediyacorp.usecase.crearsolicitud.external_service_use_cases.ExternalApiPortUseCase;
+import co.crediyacorp.usecase.crearsolicitud.mapper.SolicitudMapperUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import reactor.core.publisher.Flux;
@@ -24,6 +27,9 @@ public class SolicitudUseCase {
     private final SolicitudRepository solicitudRepository;
     private final EstadoRepository estadoRepository;
     private final TipoPrestamoRepository tipoPrestamoRepository;
+    private final ExternalApiPortUseCase externalApiPortUseCase;
+    private final SolicitudMapperUseCase solicitudMapper;
+
 
     public Mono<Solicitud> crearSolicitud(Solicitud solicitud) {
         return validarCamposVacios(solicitud)
@@ -48,7 +54,7 @@ public class SolicitudUseCase {
                 .doOnError(e -> log.severe("Error al crear la solicitud: " + e.getMessage()));
     }
 
-    public Flux<Solicitud> obtenerSolicitudesPendientes(Integer page, Integer size, BigDecimal monto, String sortDirection,String nombreEstado) {
+    public Flux<SolicitudPendienteDto> obtenerSolicitudesPendientes(Integer page, Integer size, BigDecimal monto, String sortDirection, String nombreEstado) {
         return Mono.zip(
                         estadoRepository.obtenerIdEstadoPorNombre("PENDIENTE_DE_REVISION"),
                         estadoRepository.obtenerIdEstadoPorNombre("RECHAZADO"),
@@ -67,9 +73,35 @@ public class SolicitudUseCase {
 
                         )
                 )
+                .collectList()
+                .flatMapMany(solicitudes -> {
+                    List<String> emails = solicitudes.stream()
+                            .map(Solicitud::getEmail)
+                            .toList();
+
+                    Mono<BigDecimal> deudaMensualMono = obtenerDeudaMensualAprobada();
+                    Mono<List<BigDecimal>> salariosMono = externalApiPortUseCase.consultarSalarios(emails);
+
+                    return Mono.zip(deudaMensualMono, salariosMono)
+                            .flatMapMany(tuple -> {
+                                BigDecimal deudaMensual = tuple.getT1();
+                                List<BigDecimal> salarios = tuple.getT2();
+
+                                return Flux.range(0, solicitudes.size())
+                                        .concatMap(i -> solicitudMapper.toSolicitudPendienteDto(
+                                                solicitudes.get(i),
+                                                salarios.get(i),
+                                                deudaMensual
+                                        ));
+
+                            });
+                })
+
+
                 .doOnError(e -> log.severe("Error al obtener solicitudes pendientes: " + e.getMessage()))
                 .doOnComplete(() -> log.info("Obtencion de solicitudes pendientes completada"));
     }
+
 
     public Mono<BigDecimal> obtenerDeudaMensualAprobada(){
         return estadoRepository.obtenerIdEstadoPorNombre("APROBADO")

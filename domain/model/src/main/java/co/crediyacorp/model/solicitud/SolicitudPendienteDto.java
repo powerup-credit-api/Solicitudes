@@ -1,4 +1,4 @@
-package co.crediyacorp.api.dtos;
+package co.crediyacorp.model.solicitud;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
