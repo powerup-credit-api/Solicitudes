@@ -6,7 +6,7 @@ import co.crediyacorp.model.solicitud.SolicitudPendienteDto;
 import co.crediyacorp.model.solicitud.gateways.SolicitudRepository;
 import co.crediyacorp.model.excepciones.ValidationException;
 import co.crediyacorp.model.tipoprestamo.gateways.TipoPrestamoRepository;
-import co.crediyacorp.usecase.crearsolicitud.external_service_use_cases.ExternalApiPortUseCase;
+import co.crediyacorp.usecase.crearsolicitud.external_service_use_cases.UsuarioExternalApiPortUseCase;
 import co.crediyacorp.usecase.crearsolicitud.mapper.SolicitudMapperUseCase;
 import co.crediyacorp.usecase.crearsolicitud.usecases.SolicitudUseCase;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ class SolicitudUseCaseTest {
     private SolicitudMapperUseCase solicitudMapper;
 
     @Mock
-    private ExternalApiPortUseCase externalApiPortUseCase;
+    private UsuarioExternalApiPortUseCase usuarioExternalApiPortUseCase;
 
     @InjectMocks
     private SolicitudUseCase solicitudUseCase;
@@ -236,7 +236,7 @@ class SolicitudUseCaseTest {
                 anyList(), anyInt(), anyInt(), any(), anyString(), anyString()
         )).thenReturn(Flux.just(solicitud1, solicitud2));
 
-        when(externalApiPortUseCase.consultarSalarios(anyList()))
+        when(usuarioExternalApiPortUseCase.consultarSalarios(anyList()))
                 .thenReturn(Mono.just(List.of(BigDecimal.valueOf(2000), BigDecimal.valueOf(3000))));
 
 
@@ -288,7 +288,7 @@ class SolicitudUseCaseTest {
                 .thenReturn(Flux.empty());
         lenient().when(solicitudRepository.obtenerSolicitudesPendientes(anyList(), anyInt(), anyInt(), any(), anyString(), anyString()))
                 .thenReturn(Flux.empty());
-        lenient().when(externalApiPortUseCase.consultarSalarios(anyList()))
+        lenient().when(usuarioExternalApiPortUseCase.consultarSalarios(anyList()))
                 .thenReturn(Mono.just(List.of()));
         lenient().when(solicitudMapper.toSolicitudPendienteDto(any(Solicitud.class), any(BigDecimal.class), any(BigDecimal.class)))
                 .thenReturn(Mono.just(new SolicitudPendienteDto(
@@ -337,7 +337,7 @@ class SolicitudUseCaseTest {
                 anyList(), anyInt(), anyInt(), any(), anyString(), anyString()
         )).thenReturn(Flux.just(solicitud));
 
-        when(externalApiPortUseCase.consultarSalarios(anyList()))
+        when(usuarioExternalApiPortUseCase.consultarSalarios(anyList()))
                 .thenReturn(Mono.just(List.of(BigDecimal.valueOf(1800))));
 
 
@@ -400,7 +400,7 @@ class SolicitudUseCaseTest {
                 anyList(), anyInt(), anyInt(), any(), anyString(), anyString()
         )).thenReturn(Flux.just(solicitud));
 
-        when(externalApiPortUseCase.consultarSalarios(anyList()))
+        when(usuarioExternalApiPortUseCase.consultarSalarios(anyList()))
                 .thenReturn(Mono.just(List.of(BigDecimal.valueOf(2500))));
 
         when(solicitudMapper.toSolicitudPendienteDto(any(Solicitud.class), any(BigDecimal.class), any(BigDecimal.class)))

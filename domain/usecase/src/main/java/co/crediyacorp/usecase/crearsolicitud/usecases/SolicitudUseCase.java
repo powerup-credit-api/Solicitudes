@@ -6,7 +6,7 @@ import co.crediyacorp.model.solicitud.SolicitudPendienteDto;
 import co.crediyacorp.model.solicitud.gateways.SolicitudRepository;
 import co.crediyacorp.model.excepciones.ValidationException;
 import co.crediyacorp.model.tipoprestamo.gateways.TipoPrestamoRepository;
-import co.crediyacorp.usecase.crearsolicitud.external_service_use_cases.ExternalApiPortUseCase;
+import co.crediyacorp.usecase.crearsolicitud.external_service_use_cases.UsuarioExternalApiPortUseCase;
 import co.crediyacorp.usecase.crearsolicitud.mapper.SolicitudMapperUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -27,7 +27,7 @@ public class SolicitudUseCase {
     private final SolicitudRepository solicitudRepository;
     private final EstadoRepository estadoRepository;
     private final TipoPrestamoRepository tipoPrestamoRepository;
-    private final ExternalApiPortUseCase externalApiPortUseCase;
+    private final UsuarioExternalApiPortUseCase usuarioExternalApiPortUseCase;
     private final SolicitudMapperUseCase solicitudMapper;
 
 
@@ -80,7 +80,7 @@ public class SolicitudUseCase {
                             .toList();
 
                     Mono<BigDecimal> deudaMensualMono = obtenerDeudaMensualAprobada();
-                    Mono<List<BigDecimal>> salariosMono = externalApiPortUseCase.consultarSalarios(emails);
+                    Mono<List<BigDecimal>> salariosMono = usuarioExternalApiPortUseCase.consultarSalarios(emails);
 
                     return Mono.zip(deudaMensualMono, salariosMono)
                             .flatMapMany(tuple -> {

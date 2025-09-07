@@ -6,7 +6,7 @@ import co.crediyacorp.api.mappers.SolicitudMapper;
 import co.crediyacorp.model.excepciones.ValidationException;
 
 
-import co.crediyacorp.usecase.crearsolicitud.external_service_use_cases.ExternalApiPortUseCase;
+import co.crediyacorp.usecase.crearsolicitud.external_service_use_cases.UsuarioExternalApiPortUseCase;
 import co.crediyacorp.usecase.crearsolicitud.transaction_usecase.ExecuteSolicitudUseCase;
 import co.crediyacorp.usecase.crearsolicitud.usecases.SolicitudUseCase;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class Handler {
 
     private final ExecuteSolicitudUseCase executeSolicitudUseCase;
     private final SolicitudMapper solicitudMapper;
-    private final ExternalApiPortUseCase externalApiPortUseCase;
+    private final UsuarioExternalApiPortUseCase usuarioExternalApiPortUseCase;
     private final SolicitudUseCase solicitudUseCase;
 
 
@@ -45,7 +45,7 @@ public class Handler {
                                 Mono.error(new ValidationException("El email no coincide con el usuario autenticado"))
 
                 )
-                .flatMap(dto -> externalApiPortUseCase.validarUsuario(dto.email(), dto.documentoIdentidad())
+                .flatMap(dto -> usuarioExternalApiPortUseCase.validarUsuario(dto.email(), dto.documentoIdentidad())
                         .filter(Boolean::booleanValue)
                         .switchIfEmpty(Mono.error(new ValidationException("Usuario no válido")))
                         .flatMap(valid -> solicitudMapper.toDomain(dto)

@@ -1,6 +1,6 @@
 package co.crediyacorp.usecase.crearsolicitud.external_service_use_cases;
 
-import co.crediyacorp.model.external_services.ExternalApiPort;
+import co.crediyacorp.model.external_services.UsuarioExternalApiPort;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -8,16 +8,16 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @RequiredArgsConstructor
-public class ExternalApiPortUseCase {
+public class UsuarioExternalApiPortUseCase {
 
-    private final ExternalApiPort externalApiPort;
+    private final UsuarioExternalApiPort usuarioExternalApiPort;
 
     public Mono<Boolean> validarUsuario(String email, String documentoIdentidad) {
-        return externalApiPort.validarUsuario(email, documentoIdentidad);
+        return usuarioExternalApiPort.validarUsuario(email, documentoIdentidad);
     }
 
     public Mono<List<BigDecimal>> consultarSalarios(List<String> empleadosIds) {
-        return externalApiPort.consultarSalarios(empleadosIds);
+        return usuarioExternalApiPort.consultarSalarios(empleadosIds);
     }
 
 

@@ -1,7 +1,8 @@
 package co.crediyacorp.r2dbc.gateways.adapters;
 
 import co.crediyacorp.model.excepciones.ValidationException;
-import co.crediyacorp.model.external_services.ExternalApiPort;
+import co.crediyacorp.model.external_services.UsuarioExternalApiPort;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
@@ -13,17 +14,27 @@ import java.util.Collections;
 import java.util.List;
 
 @Component
-public class ExternalApiAdapter implements ExternalApiPort {
-    private final WebClient webClient;
+public class UsuarioUsuarioExternalApiAdapter implements UsuarioExternalApiPort {
 
-    public ExternalApiAdapter(WebClient webClient) {
-        this.webClient = webClient;
+
+    private final WebClient.Builder webClientBuilder;
+
+    @Value("${external.api.usuario.base-url}")
+    private String baseUrl ;
+
+
+    public UsuarioUsuarioExternalApiAdapter(WebClient.Builder webClientBuilder) {
+        this.webClientBuilder = webClientBuilder;
+
     }
 
 
     @Override
     public Mono<Boolean> validarUsuario(String email, String documentoIdentidad) {
-        return webClient.get()
+        return webClientBuilder
+                .baseUrl(baseUrl)
+                .build()
+                .get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/v1/validar")
                         .queryParam("email", email)
@@ -43,7 +54,10 @@ public class ExternalApiAdapter implements ExternalApiPort {
 
     @Override
     public Mono<List<BigDecimal>> consultarSalarios(List<String> emails) {
-        return webClient.post()
+        return webClientBuilder
+                .baseUrl(baseUrl)
+                .build()
+                .post()
                 .uri("/api/v1/salario")
                 .bodyValue(emails)
                 .retrieve()

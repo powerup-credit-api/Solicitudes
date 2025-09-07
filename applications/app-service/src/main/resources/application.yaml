@@ -21,6 +21,12 @@ routes:
   paths:
     solicitud: "/api/v1/solicitud"
 
+external:
+  api:
+    usuario:
+      base-url: "${USUARIO_API_URL:http://localhost:8082}"
+
+
   profiles:
     include: null
 management:
