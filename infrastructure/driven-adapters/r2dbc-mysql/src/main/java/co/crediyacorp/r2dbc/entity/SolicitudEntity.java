@@ -46,7 +46,7 @@ public class SolicitudEntity implements Persistable<String> {
 
 
     @Transient
-    private boolean isNew = true; // por defecto, nuevo
+    private boolean isNew = true;
 
     @Override
     public String getId() {

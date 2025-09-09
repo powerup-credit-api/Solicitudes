@@ -102,6 +102,26 @@ public class SolicitudUseCase {
                 .doOnComplete(() -> log.info("Obtencion de solicitudes pendientes completada"));
     }
 
+    public Mono<Solicitud> actualizarEstadoSolicitud(String idSolicitud, String nuevoEstado) {
+        return Mono.zip(solicitudRepository.obtenerSolicitudPorId(idSolicitud),
+                        estadoRepository.obtenerIdEstadoPorNombre(nuevoEstado))
+                .flatMap(tuple -> solicitudRepository.actualizarSolicitud(
+                        Solicitud.builder()
+                                .idSolicitud(tuple.getT1().getIdSolicitud())
+                                .documentoIdentidad(tuple.getT1().getDocumentoIdentidad())
+                                .email(tuple.getT1().getEmail())
+                                .monto(tuple.getT1().getMonto())
+                                .plazo(tuple.getT1().getPlazo())
+                                .idTipoPrestamo(tuple.getT1().getIdTipoPrestamo())
+                                .fechaCreacion(tuple.getT1().getFechaCreacion())
+                                .idEstado(tuple.getT2())
+                                .build()
+                    )
+                )
+                .doOnSuccess(solicitudActualizada -> log.info("Solicitud con ID " + idSolicitud + " actualizada al estado " + nuevoEstado))
+                .doOnError(e -> log.severe("Error al actualizar el estado de la solicitud con ID " + idSolicitud + ": " + e.getMessage()));
+    }
+
 
     public Mono<BigDecimal> obtenerDeudaMensualAprobada(){
         return estadoRepository.obtenerIdEstadoPorNombre("APROBADO")

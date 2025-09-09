@@ -9,6 +9,11 @@ import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 @Repository
 public class EstadoRepositoryAdapter extends ReactiveAdapterOperations<
         Estado,
@@ -16,18 +21,28 @@ public class EstadoRepositoryAdapter extends ReactiveAdapterOperations<
     String,
         EstadoR2DBCRepository
 > implements EstadoRepository {
+
+    private final Map<String, Mono<String>> estadoCacheIdNombre;
+    private final Map<String, Mono<String>>estadoCacheNombreId;
     public EstadoRepositoryAdapter(EstadoR2DBCRepository repository, ObjectMapper mapper) {
 
         super(repository, mapper, d -> mapper.map(d, Estado.class));
+        this.estadoCacheIdNombre = new ConcurrentHashMap<>();
+        this.estadoCacheNombreId = new ConcurrentHashMap<>();
     }
 
     @Override
     public Mono<String> obtenerIdEstadoPorNombre(String nombre) {
-        return repository.findIdByNombre(nombre);
+        return estadoCacheIdNombre.computeIfAbsent(nombre, key->
+                repository.findIdEstadoByNombre(key).cache(Duration.of(10, ChronoUnit.MINUTES))
+                );
     }
 
     @Override
     public Mono<String> obtenerNombreEstadoPorId(String id) {
-        return repository.findNombreByIdEstado(id);
+        return estadoCacheNombreId.computeIfAbsent(id,key->
+                repository.findNombreByIdEstado(key).cache(Duration.of(10, ChronoUnit.MINUTES))
+        );
+
     }
 }

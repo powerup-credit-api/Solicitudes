@@ -1,5 +1,6 @@
 package co.crediyacorp.api.rest;
 
+import co.crediyacorp.model.external_services.ExternalPusbliser;
 import co.crediyacorp.model.solicitud.SolicitudPendienteDto;
 import co.crediyacorp.api.dtos.SolicitudEntradaDto;
 import co.crediyacorp.api.mappers.SolicitudMapper;
@@ -35,6 +36,7 @@ public class Handler {
     private final SolicitudMapper solicitudMapper;
     private final UsuarioExternalApiPortUseCase usuarioExternalApiPortUseCase;
     private final SolicitudUseCase solicitudUseCase;
+    private final ExternalPusbliser externalPusbliser;
 
 
     public Mono<ServerResponse> listenCrearSolicitud(ServerRequest serverRequest) {
@@ -67,6 +69,23 @@ public class Handler {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(solicitudesConSalarios, SolicitudPendienteDto.class);
     }
+
+    public Mono<ServerResponse> listenActualizarEstadoPeticion(ServerRequest request) {
+        return executeSolicitudUseCase.executeActualizarSolicitud(
+                        request.queryParam("idSolicitud").orElseThrow(()-> new ValidationException("El id de la solicitud es obligatorio")),
+                        request.queryParam("nuevoEstado").orElseThrow(() -> new ValidationException("El nuevo estado es obligatorio"))
+                )
+                .flatMap(solicitudMapper::toResponse)
+                .flatMap(solicitud ->
+
+                        externalPusbliser.enviar(solicitud)
+                                .then(ServerResponse.ok().bodyValue(solicitud))
+                );
+
+
+    }
+
+    
 
 
 }
