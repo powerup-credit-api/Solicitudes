@@ -33,6 +33,7 @@ public class SecurityConfig {
                                 "/swagger-ui/index.html").permitAll()
                         .pathMatchers(HttpMethod.POST,"/api/v1/solicitud").hasAnyRole("ADMINISTRADOR", "SOLICITANTE","ASESOR")
                         .pathMatchers(HttpMethod.GET,"/api/v1/solicitud").hasAnyRole("ADMINISTRADOR", "ASESOR")
+                        .pathMatchers(HttpMethod.PUT,"/api/v1/solicitud").hasAnyRole( "ADMINISTRADOR", "ASESOR")
                         .anyExchange().authenticated()
                 )
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)

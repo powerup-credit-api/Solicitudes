@@ -21,6 +21,11 @@ routes:
   paths:
     solicitud: "/api/v1/solicitud"
 
+aws:
+  sqs:
+    loan-queue-url: "https://sqs.us-east-2.amazonaws.com/925323749763/SolicitudDecididaQueue"
+
+
 external:
   api:
     usuario:

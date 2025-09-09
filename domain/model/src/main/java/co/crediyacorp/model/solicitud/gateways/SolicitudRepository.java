@@ -12,5 +12,10 @@ public interface SolicitudRepository {
 
     Mono<Solicitud> guardarSolicitud(Solicitud solicitud);
     Flux<Solicitud> obtenerSolicitudesPorEstadoAprobado(String idEstado);
-    Flux<Solicitud> obtenerSolicitudesPendientes(List<String> estados, Integer page, Integer size, BigDecimal monto, String sortDirection,String estadoId);
+
+    Mono<Solicitud> obtenerSolicitudPorId(String idSolicitud);
+
+    Mono<Solicitud> actualizarSolicitud(Solicitud solicitud);
+
+    Flux<Solicitud> obtenerSolicitudesPendientes(List<String> estados, Integer page, Integer size, BigDecimal monto, String sortDirection, String estadoId);
 }

@@ -15,4 +15,8 @@ public class ExecuteSolicitudUseCase {
         return transactionalWrapper.executeInTransaction(solicitudUseCase.crearSolicitud(solicitud));
     }
 
+    public Mono<Solicitud> executeActualizarSolicitud(String idSolicitud, String nuevoEstado) {
+        return transactionalWrapper.executeInTransaction(solicitudUseCase.actualizarEstadoSolicitud(idSolicitud, nuevoEstado));
+    }
+
 }

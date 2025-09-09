@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 @Repository
 public interface EstadoR2DBCRepository extends ReactiveCrudRepository<EstadoEntity, String>, ReactiveQueryByExampleExecutor<EstadoEntity> {
 
-    Mono<String> findIdByNombre(String nombre);
+    Mono<String> findIdEstadoByNombre(String nombre);
 
     @Query("SELECT nombre FROM estado WHERE id_estado = :id")
     Mono<String> findNombreByIdEstado(String id);
