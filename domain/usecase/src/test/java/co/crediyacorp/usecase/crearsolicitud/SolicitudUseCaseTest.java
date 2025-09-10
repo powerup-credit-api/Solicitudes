@@ -481,6 +481,63 @@ class SolicitudUseCaseTest {
                 .verify();
     }
 
+    @Test
+    void actualizarEstadoSolicitud_exito() {
+        String idSolicitud = "123";
+        String nuevoEstado = "APROBADA";
+
+        Solicitud solicitud = Solicitud.builder()
+                .idSolicitud(idSolicitud)
+                .documentoIdentidad("11111111")
+                .email("test@email.com")
+                .monto(new BigDecimal("5000.00"))
+                .plazo("12")
+                .idTipoPrestamo("TP1")
+                .fechaCreacion(LocalDate.of(2025, 9, 10))
+                .idEstado("ESTADO_ANTERIOR")
+                .build();
+
+        String nuevoEstadoId = "ESTADO_NUEVO";
+
+        Solicitud solicitudActualizada = solicitud.toBuilder()
+                .idEstado(nuevoEstadoId)
+                .build();
+
+        when(solicitudRepository.obtenerSolicitudPorId(idSolicitud)).thenReturn(Mono.just(solicitud));
+        when(estadoRepository.obtenerIdEstadoPorNombre(nuevoEstado)).thenReturn(Mono.just(nuevoEstadoId));
+        when(solicitudRepository.actualizarSolicitud(any(Solicitud.class))).thenReturn(Mono.just(solicitudActualizada));
+
+        StepVerifier.create(solicitudUseCase.actualizarEstadoSolicitud(idSolicitud, nuevoEstado))
+                .expectNextMatches(result ->
+                        result.getIdSolicitud().equals(idSolicitud) &&
+                                result.getIdEstado().equals(nuevoEstadoId)
+                )
+                .verifyComplete();
+
+        verify(solicitudRepository).obtenerSolicitudPorId(idSolicitud);
+        verify(estadoRepository).obtenerIdEstadoPorNombre(nuevoEstado);
+        verify(solicitudRepository).actualizarSolicitud(any(Solicitud.class));
+    }
+
+    @Test
+    void actualizarEstadoSolicitud_error() {
+        String idSolicitud = "123";
+        String nuevoEstado = "APROBADA";
+
+        when(solicitudRepository.obtenerSolicitudPorId(idSolicitud))
+                .thenReturn(Mono.error(new RuntimeException("DB error")));
+        when(estadoRepository.obtenerIdEstadoPorNombre(nuevoEstado))
+                .thenReturn(Mono.never());
+
+        StepVerifier.create(solicitudUseCase.actualizarEstadoSolicitud(idSolicitud, nuevoEstado))
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException &&
+                        throwable.getMessage().equals("DB error"))
+                .verify();
+
+        verify(solicitudRepository).obtenerSolicitudPorId(idSolicitud);
+        verify(estadoRepository).obtenerIdEstadoPorNombre(nuevoEstado);
+        verify(solicitudRepository, never()).actualizarSolicitud(any(Solicitud.class));
+    }
 
 
 }

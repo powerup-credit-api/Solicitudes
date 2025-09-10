@@ -1,6 +1,7 @@
 package co.crediyacorp.api.rest;
 
 import co.crediyacorp.api.config.SolicitudPath;
+import co.crediyacorp.api.dtos.RespuestaDto;
 import co.crediyacorp.api.dtos.SolicitudEntradaDto;
 import co.crediyacorp.model.solicitud.SolicitudPendienteDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -123,7 +124,54 @@ public class RouterRest {
                                     )
                             }
                     )
+            ),
+
+            @RouterOperation(
+                    path = "/api/v1/solicitud",
+                    produces = {
+                            MediaType.APPLICATION_JSON_VALUE
+                    },
+                    method = RequestMethod.PUT,
+                    operation = @Operation(
+                            operationId = "actualizarEstadoSolicitud",
+                            summary = "Actualizar el estado de una solicitud",
+                            description = """
+        Se debe poder actualizar el estado de una solicitud existente proporcionando el idSolicitud y el nuevoEstado.
+        Validaciones:
+        - idSolicitud es obligatorio.
+        - nuevoEstado es obligatorio.
+        - nuevoEstado solo puede tomar valores validos (ejemplo: APROBADO o RECHAZADO).
+        
+        Adicionalmente, cuando el estado cambia a APROBADO o RECHAZADO se envia un correo de notificacion al solicitante.
+        """,
+                            parameters = {
+                                    @Parameter(
+                                            name = "idSolicitud",
+                                            in = ParameterIn.QUERY,
+                                            required = true,
+                                            description = "Identificador unico de la solicitud"
+                                    ),
+                                    @Parameter(
+                                            name = "nuevoEstado",
+                                            in = ParameterIn.QUERY,
+                                            required = true,
+                                            description = "Nuevo estado de la solicitud (ejemplo: APROBADO, RECHAZADO)"
+                                    )
+                            },
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "Estado de la solicitud actualizado exitosamente",
+                                            content = @Content(schema = @Schema(implementation = RespuestaDto.class))
+                                    ),
+                                    @ApiResponse(responseCode = "400", description = "Parametros invalidos o faltantes"),
+                                    @ApiResponse(responseCode = "404", description = "Solicitud no encontrada")
+                            }
+                    )
             )
+
+
+
 
     })
 
