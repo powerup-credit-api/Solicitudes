@@ -85,7 +85,7 @@ public class RouterRest {
                             operationId = "listarSolicitudes",
                             summary = "Obtener lista de solicitudes de prestamo",
                             description = """
-        Devuelve una lista paginada de solicitudes de prestamo. 
+        Devuelve una lista paginada de solicitudes de prestamo.
         Se puede especificar la pagina, el tamaño y la direccion de ordenamiento.
         """,
                             parameters = {

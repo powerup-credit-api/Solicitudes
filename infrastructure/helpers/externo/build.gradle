@@ -4,7 +4,8 @@ dependencies {
     implementation 'org.springframework:spring-context'
     implementation "software.amazon.awssdk:sqs:2.20.150"
     implementation 'com.fasterxml.jackson.core:jackson-databind'
-
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor:3.3.4'
+    implementation 'org.springframework.boot:spring-boot-autoconfigure:3.3.4'
 
 
 }

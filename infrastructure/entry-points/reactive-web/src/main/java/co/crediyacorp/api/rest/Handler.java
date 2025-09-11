@@ -71,9 +71,12 @@ public class Handler {
     }
 
     public Mono<ServerResponse> listenActualizarEstadoPeticion(ServerRequest request) {
+        String idSolicitud =  request.queryParam("idSolicitud").orElseThrow(()-> new ValidationException("El id de la solicitud es obligatorio"));
+        String estado =request.queryParam("nuevoEstado").orElseThrow(() -> new ValidationException("El nuevo estado es obligatorio"));
+
         return executeSolicitudUseCase.executeActualizarSolicitud(
-                        request.queryParam("idSolicitud").orElseThrow(()-> new ValidationException("El id de la solicitud es obligatorio")),
-                        request.queryParam("nuevoEstado").orElseThrow(() -> new ValidationException("El nuevo estado es obligatorio"))
+                        idSolicitud,
+                        estado
                 )
                 .flatMap(solicitudMapper::toResponse)
                 .flatMap(solicitud ->
