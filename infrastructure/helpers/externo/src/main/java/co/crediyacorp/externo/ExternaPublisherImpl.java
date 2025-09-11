@@ -3,7 +3,6 @@ package co.crediyacorp.externo;
 import co.crediyacorp.model.external_services.ExternalPusbliser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -17,10 +16,7 @@ public class ExternaPublisherImpl implements ExternalPusbliser {
 
     private final SqsClient sqsClient;
     private final ObjectMapper objectMapper;
-
-    @Value("${aws.sqs.loan-queue-url}")
-    private String solicitudesQueueUrl;
-
+    private final SqsProperties sqsProperties;
 
     @Override
     public Mono<Void> enviar(Object evento) {
@@ -28,7 +24,7 @@ public class ExternaPublisherImpl implements ExternalPusbliser {
         return Mono.fromCallable(() -> {
                     String json = objectMapper.writeValueAsString(evento);
                     SendMessageRequest request = SendMessageRequest.builder()
-                            .queueUrl(solicitudesQueueUrl)
+                            .queueUrl(sqsProperties.loanQueueUrl())
                             .messageBody(json)
                             .build();
 
