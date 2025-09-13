@@ -18,18 +18,17 @@ public class ExternaPublisherImpl implements ExternalPusbliser {
     private final ObjectMapper objectMapper;
     private final SqsProperties sqsProperties;
 
-    @Override
-    public Mono<Void> enviar(Object evento) {
 
+
+    private Mono<Void> enviar(Object evento, String queueUrl) {
         return Mono.fromCallable(() -> {
                     String json = objectMapper.writeValueAsString(evento);
                     SendMessageRequest request = SendMessageRequest.builder()
-                            .queueUrl(sqsProperties.loanQueueUrl())
+                            .queueUrl(queueUrl)
                             .messageBody(json)
                             .build();
 
                     sqsClient.sendMessage(request);
-
                     return null;
                 })
                 .subscribeOn(Schedulers.boundedElastic())
@@ -37,4 +36,13 @@ public class ExternaPublisherImpl implements ExternalPusbliser {
     }
 
 
+    @Override
+    public Mono<Void> enviarEmail(Object evento) {
+        return enviar(evento, sqsProperties.email());
+    }
+
+    @Override
+    public Mono<Void> enviarValidacionAutomatica(Object evento) {
+        return enviar(evento, sqsProperties.validacion());
+    }
 }

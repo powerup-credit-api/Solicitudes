@@ -70,6 +70,27 @@ public class UsuarioUsuarioExternalApiAdapter implements UsuarioExternalApiPort 
                 .defaultIfEmpty(Collections.emptyList());
     }
 
+    @Override
+    public Mono<BigDecimal> consultarSalario(String email) {
+        return webClientBuilder
+                .baseUrl(baseUrl)
+                .build()
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/v1/salario")
+                        .queryParam("email", email)
+                        .build()
+                )
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, clientResponse ->
+                        clientResponse.bodyToMono(String.class)
+                                .flatMap(this::extraerMensaje)
+                                .flatMap(msg -> Mono.error(new ValidationException(msg)))
+                )
+                .bodyToMono(BigDecimal.class)
+                .defaultIfEmpty(BigDecimal.ZERO);
+    }
+
 
     private Mono<String> extraerMensaje(String rawJson) {
         return Mono.justOrEmpty(rawJson)

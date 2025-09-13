@@ -118,6 +118,24 @@ public class SolicitudUseCase {
     }
 
 
+
+    public Flux<Solicitud> obtenerSolicitudesPorEstadoAprobado(String email) {
+        return estadoRepository.obtenerIdEstadoPorNombre("APROBADO")
+                        .flatMapMany(idEstado->
+                                solicitudRepository.obtenerSolicitudesAprobadasPorUsuario(email, idEstado)
+                        )
+                .doOnError(e -> log.severe("Error al obtener solicitudes por estado aprobado: " + e.getMessage()))
+                .doOnComplete(() -> log.info("Obtencion de solicitudes por estado aprobado completada"));
+    }
+
+    public Mono<Boolean> tieneValidacionAutomatica(String idTipoPrestamo){
+        return tipoPrestamoRepository.tieneValidacionAutomatica(idTipoPrestamo)
+                .doOnError(e -> log.severe("Error al verificar si el tipo de préstamo tiene validación automática: " + e.getMessage()))
+                .doOnSuccess(tieneValidacion -> log.info("Verificación de validación automática completada: " + tieneValidacion));
+
+    }
+
+
     public Mono<BigDecimal> obtenerDeudaMensualAprobada(){
         return estadoRepository.obtenerIdEstadoPorNombre("APROBADO")
                 .flatMap(estadoAprobadoId -> solicitudRepository.obtenerSolicitudesPorEstadoAprobado(estadoAprobadoId)

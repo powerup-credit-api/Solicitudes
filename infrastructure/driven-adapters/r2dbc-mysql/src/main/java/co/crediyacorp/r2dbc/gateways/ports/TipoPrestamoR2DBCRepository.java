@@ -22,6 +22,9 @@ public interface TipoPrestamoR2DBCRepository extends ReactiveCrudRepository<Tipo
     @Query("SELECT tasa_interes FROM tipo_prestamo WHERE id_tipo_prestamo = :idTipoPrestamo")
     Mono<BigDecimal> findTasaInteresByIdTipoPrestamo(String idTipoPrestamo);
 
+    @Query("SELECT validacion_automatica FROM tipo_prestamo WHERE id_tipo_prestamo = :idTipoPrestamo")
+    Mono<Boolean> findValidacionAutomaticaByIdTipoPrestamo(String idTipoPrestamo);
+
 
 
 }

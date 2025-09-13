@@ -9,4 +9,6 @@ public interface UsuarioExternalApiPort {
     Mono<Boolean> validarUsuario(String email, String documentoIdentidad);
 
     Mono<List<BigDecimal>> consultarSalarios(List<String> emails);
+
+    Mono<BigDecimal> consultarSalario(String email);
 }

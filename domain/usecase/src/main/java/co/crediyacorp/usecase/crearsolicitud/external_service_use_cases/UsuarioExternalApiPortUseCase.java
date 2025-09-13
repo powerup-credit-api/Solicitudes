@@ -20,6 +20,12 @@ public class UsuarioExternalApiPortUseCase {
         return usuarioExternalApiPort.consultarSalarios(empleadosIds);
     }
 
+    public Mono<BigDecimal> consultarSalario(String email) {
+        return usuarioExternalApiPort.consultarSalario(email);
+    }
+
+
+
 
 
 
