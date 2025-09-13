@@ -17,5 +17,7 @@ public interface SolicitudRepository {
 
     Mono<Solicitud> actualizarSolicitud(Solicitud solicitud);
 
+    Flux<Solicitud> obtenerSolicitudesAprobadasPorUsuario(String email, String idEstado);
+
     Flux<Solicitud> obtenerSolicitudesPendientes(List<String> estados, Integer page, Integer size, BigDecimal monto, String sortDirection, String estadoId);
 }

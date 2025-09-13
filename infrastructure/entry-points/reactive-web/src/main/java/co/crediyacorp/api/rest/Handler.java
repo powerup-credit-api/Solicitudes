@@ -1,6 +1,9 @@
 package co.crediyacorp.api.rest;
 
+import co.crediyacorp.api.dtos.DatosTransformacion;
+import co.crediyacorp.api.dtos.ValidacionAutomaticaSalidaDto;
 import co.crediyacorp.model.external_services.ExternalPusbliser;
+import co.crediyacorp.model.solicitud.Solicitud;
 import co.crediyacorp.model.solicitud.SolicitudPendienteDto;
 import co.crediyacorp.api.dtos.SolicitudEntradaDto;
 import co.crediyacorp.api.mappers.SolicitudMapper;
@@ -22,7 +25,9 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+
 import java.math.BigDecimal;
+
 
 
 import java.util.Objects;
@@ -39,22 +44,6 @@ public class Handler {
     private final ExternalPusbliser externalPusbliser;
 
 
-    public Mono<ServerResponse> listenCrearSolicitud(ServerRequest serverRequest) {
-        return serverRequest.bodyToMono(SolicitudEntradaDto.class)
-                .flatMap(dto ->
-                        Objects.equals(serverRequest.headers().firstHeader("X-USER-SUBJECT"), dto.email()) ?
-                                Mono.just(dto) :
-                                Mono.error(new ValidationException("El email no coincide con el usuario autenticado"))
-
-                )
-                .flatMap(dto -> usuarioExternalApiPortUseCase.validarUsuario(dto.email(), dto.documentoIdentidad())
-                        .filter(Boolean::booleanValue)
-                        .switchIfEmpty(Mono.error(new ValidationException("Usuario no válido")))
-                        .flatMap(valid -> solicitudMapper.toDomain(dto)
-                                .flatMap(executeSolicitudUseCase::executeGuardarSolicitud))
-                )
-                .flatMap(solicitud -> ServerResponse.ok().bodyValue(solicitud));
-    }
 
     public Mono<ServerResponse> listenObtenerSolicitudesPendientes(ServerRequest request) {
         Flux<SolicitudPendienteDto> solicitudesConSalarios = solicitudUseCase.obtenerSolicitudesPendientes(
@@ -72,7 +61,7 @@ public class Handler {
 
     public Mono<ServerResponse> listenActualizarEstadoPeticion(ServerRequest request) {
         String idSolicitud =  request.queryParam("idSolicitud").orElseThrow(()-> new ValidationException("El id de la solicitud es obligatorio"));
-        String estado =request.queryParam("nuevoEstado").orElseThrow(() -> new ValidationException("El nuevo estado es obligatorio"));
+        String estado = request.queryParam("nuevoEstado").orElseThrow(() -> new ValidationException("El nuevo estado es obligatorio"));
 
         return executeSolicitudUseCase.executeActualizarSolicitud(
                         idSolicitud,
@@ -81,14 +70,66 @@ public class Handler {
                 .flatMap(solicitudMapper::toResponse)
                 .flatMap(solicitud ->
 
-                        externalPusbliser.enviar(solicitud)
+                        externalPusbliser.enviarEmail(solicitud)
                                 .then(ServerResponse.ok().bodyValue(solicitud))
                 );
 
 
     }
 
-    
+    public Mono<ServerResponse> listenCrearSolicitud(ServerRequest serverRequest) {
+        return serverRequest.bodyToMono(SolicitudEntradaDto.class)
+                .flatMap(dto -> validarEmailHeader(serverRequest, dto))
+                .flatMap(this::validarUsuario)
+                .flatMap(solicitudMapper::toDomain)
+                .flatMap(executeSolicitudUseCase::executeGuardarSolicitud)
+                .flatMap(solicitud ->
+                        solicitudUseCase.tieneValidacionAutomatica(solicitud.getIdTipoPrestamo())
+                                .flatMap(shouldSend ->
+                                        Boolean.TRUE.equals(shouldSend)
+                                                ? validacionAutomaticaEnviar(solicitud).thenReturn(solicitud)
+                                                : Mono.just(solicitud)
+                                )
+                )
+                .flatMap(solicitud -> ServerResponse.ok().bodyValue(solicitud));
+    }
+
+
+    private Mono<SolicitudEntradaDto> validarEmailHeader(ServerRequest request, SolicitudEntradaDto dto) {
+        return Objects.equals(request.headers().firstHeader("X-USER-SUBJECT"), dto.email())
+                ? Mono.just(dto)
+                : Mono.error(new ValidationException("El email no coincide con el usuario autenticado"));
+    }
+
+    private Mono<SolicitudEntradaDto> validarUsuario(SolicitudEntradaDto dto) {
+        return usuarioExternalApiPortUseCase.validarUsuario(dto.email(), dto.documentoIdentidad())
+                .filter(Boolean::booleanValue)
+                .switchIfEmpty(Mono.error(new ValidationException("Usuario no válido")))
+                .thenReturn(dto);
+    }
+
+    private Mono<DatosTransformacion> obtenerDatosParaTransformar(Solicitud solicitud) {
+        String email = solicitud.getEmail();
+        return Mono.zip(
+                usuarioExternalApiPortUseCase.consultarSalario(email),
+                solicitudUseCase.obtenerSolicitudesPorEstadoAprobado(email).collectList()
+        ).map(tuple -> new DatosTransformacion(tuple.getT1(), tuple.getT2()));
+    }
+
+    private Mono<ValidacionAutomaticaSalidaDto> mapToSalida(Solicitud solicitud, DatosTransformacion datos) {
+        return solicitudMapper.toValidacionAutomaticaSalidaDto(
+                solicitud,
+                datos.solicitudesAprobadas(),
+                datos.salarioBase()
+        );
+    }
+
+    private Mono<Void> validacionAutomaticaEnviar(Solicitud solicitud) {
+        return obtenerDatosParaTransformar(solicitud)
+                .flatMap(datos -> mapToSalida(solicitud, datos))
+                .flatMap(externalPusbliser::enviarValidacionAutomatica);
+    }
+
 
 
 }

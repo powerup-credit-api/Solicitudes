@@ -13,4 +13,6 @@ public interface TipoPrestamoRepository {
 
     Mono<String> obtenerNombreTipoPrestamoPorId(String idTipoPrestamo);
     Mono<BigDecimal> obtenerTasaInteresPorIdTipoPrestamo(String idTipoPrestamo);
+
+    Mono<Boolean> tieneValidacionAutomatica(String idTipoPrestamo);
 }

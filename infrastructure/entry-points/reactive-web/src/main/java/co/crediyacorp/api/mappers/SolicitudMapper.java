@@ -3,6 +3,7 @@ package co.crediyacorp.api.mappers;
 import co.crediyacorp.api.dtos.RespuestaDto;
 
 import co.crediyacorp.api.dtos.SolicitudEntradaDto;
+import co.crediyacorp.api.dtos.ValidacionAutomaticaSalidaDto;
 import co.crediyacorp.model.estado.gateways.EstadoRepository;
 import co.crediyacorp.model.solicitud.Solicitud;
 import co.crediyacorp.model.tipoprestamo.gateways.TipoPrestamoRepository;
@@ -11,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
+import java.util.List;
 
 
 @RequiredArgsConstructor
@@ -55,6 +58,26 @@ public class SolicitudMapper {
         ));
     }
 
+    public Mono<ValidacionAutomaticaSalidaDto> toValidacionAutomaticaSalidaDto(Solicitud solicitud, List<Solicitud> solicitudesAprobadas, BigDecimal salarioBase) {
+        return Mono.zip(
+                        tipoPrestamoRepository.obtenerTasaInteresPorIdTipoPrestamo(solicitud.getIdTipoPrestamo()),
+                        tipoPrestamoRepository.obtenerNombreTipoPrestamoPorId(solicitud.getIdTipoPrestamo()))
+                        .map(tuple -> {
+                                    String nombreTipoPrestamo = tuple.getT2();
+                                    BigDecimal tasaInteres = tuple.getT1();
+
+                                    return new ValidacionAutomaticaSalidaDto(
+                                            solicitud.getIdSolicitud(),
+                                            solicitud.getDocumentoIdentidad(),
+                                            solicitud.getEmail(),
+                                            solicitud.getMonto(),
+                                            solicitud.getPlazo(),
+                                            nombreTipoPrestamo,
+                                            tasaInteres,
+                                            salarioBase,
+                                            solicitudesAprobadas);
+                        });
+    }
 
 
     }

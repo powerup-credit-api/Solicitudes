@@ -66,5 +66,11 @@ public class TipoPrestamoRepositoryAdapter extends ReactiveAdapterOperations<
         );
     }
 
+    @Override
+    public Mono<Boolean> tieneValidacionAutomatica(String idTipoPrestamo) {
+        return repository.findValidacionAutomaticaByIdTipoPrestamo(idTipoPrestamo);
+
+    }
+
 
 }

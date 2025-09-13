@@ -23,9 +23,9 @@ routes:
 
 aws:
   sqs:
-    loan-queue-url: "https://sqs.us-east-2.amazonaws.com/925323749763/SolicitudDecididaQueue"
-
-
+    email: ${AWS_SQS_EMAIL:https://sqs.us-east-2.amazonaws.com/925323749763/SolicitudDecididaQueue}
+    validacion: ${AWS_SQS_VALIDACION:https://sqs.us-east-2.amazonaws.com/925323749763/PeticionCapacidadDeEndeudamientoQueue}
+    respuesta: ${AWS_SQS_RESPUESTA:https://sqs.us-east-2.amazonaws.com/925323749763/respuestaCapacidadEndeudamientoQueue}
 external:
   api:
     usuario:

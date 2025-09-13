@@ -51,6 +51,8 @@ class SolicitudUseCaseTest {
     @InjectMocks
     private SolicitudUseCase solicitudUseCase;
 
+
+
     private Solicitud buildSolicitudValida() {
         return Solicitud.builder()
                 .documentoIdentidad("12345")
@@ -539,5 +541,80 @@ class SolicitudUseCaseTest {
         verify(solicitudRepository, never()).actualizarSolicitud(any(Solicitud.class));
     }
 
+    @Test
+    void obtenerSolicitudesPorEstadoAprobado_retornaFluxDeSolicitudes() {
+        String email = "user@test.com";
+        String estadoId = "123";
+        Solicitud solicitud1 = Solicitud.builder().idSolicitud("sol1").build();
+        Solicitud solicitud2 = Solicitud.builder().idSolicitud("sol2").build();
+
+        when(estadoRepository.obtenerIdEstadoPorNombre("APROBADO"))
+                .thenReturn(Mono.just(estadoId));
+
+        when(solicitudRepository.obtenerSolicitudesAprobadasPorUsuario(email, estadoId))
+                .thenReturn(Flux.just(solicitud1, solicitud2));
+
+        Flux<Solicitud> result = solicitudUseCase.obtenerSolicitudesPorEstadoAprobado(email);
+
+        StepVerifier.create(result)
+                .expectNext(solicitud1)
+                .expectNext(solicitud2)
+                .verifyComplete();
+
+        verify(estadoRepository).obtenerIdEstadoPorNombre("APROBADO");
+        verify(solicitudRepository).obtenerSolicitudesAprobadasPorUsuario(email, estadoId);
+    }
+
+
+
+    @Test
+    void obtenerSolicitudesPorEstadoAprobado_retornaVacioSiNoHaySolicitudes() {
+        String email = "user@test.com";
+        String estadoId = "123";
+
+        when(estadoRepository.obtenerIdEstadoPorNombre("APROBADO"))
+                .thenReturn(Mono.just(estadoId));
+
+        when(solicitudRepository.obtenerSolicitudesAprobadasPorUsuario(email, estadoId))
+                .thenReturn(Flux.empty());
+
+        Flux<Solicitud> result = solicitudUseCase.obtenerSolicitudesPorEstadoAprobado(email);
+
+        StepVerifier.create(result)
+                .verifyComplete();
+
+        verify(estadoRepository).obtenerIdEstadoPorNombre("APROBADO");
+        verify(solicitudRepository).obtenerSolicitudesAprobadasPorUsuario(email, estadoId);
+    }
+
+    @Test
+    void tieneValidacionAutomatica_retornaTrue() {
+        String idTipoPrestamo = "tipo1";
+        when(tipoPrestamoRepository.tieneValidacionAutomatica(idTipoPrestamo))
+                .thenReturn(Mono.just(true));
+
+        Mono<Boolean> result = solicitudUseCase.tieneValidacionAutomatica(idTipoPrestamo);
+
+        StepVerifier.create(result)
+                .expectNext(true)
+                .verifyComplete();
+
+        verify(tipoPrestamoRepository).tieneValidacionAutomatica(idTipoPrestamo);
+    }
+
+    @Test
+    void tieneValidacionAutomatica_retornaFalse() {
+        String idTipoPrestamo = "tipo2";
+        when(tipoPrestamoRepository.tieneValidacionAutomatica(idTipoPrestamo))
+                .thenReturn(Mono.just(false));
+
+        Mono<Boolean> result = solicitudUseCase.tieneValidacionAutomatica(idTipoPrestamo);
+
+        StepVerifier.create(result)
+                .expectNext(false)
+                .verifyComplete();
+
+        verify(tipoPrestamoRepository).tieneValidacionAutomatica(idTipoPrestamo);
+    }
 
 }

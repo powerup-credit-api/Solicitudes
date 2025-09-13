@@ -43,6 +43,7 @@ public class SolicitudRepositoryAdapter extends ReactiveAdapterOperations<
                 .map(this::toEntity);
     }
 
+
     @Override
     public Mono<Solicitud> obtenerSolicitudPorId(String idSolicitud) {
         return repository.findById(idSolicitud)
@@ -54,6 +55,12 @@ public class SolicitudRepositoryAdapter extends ReactiveAdapterOperations<
        SolicitudEntity entity = toData(solicitud);
        entity.markAsPersisted();
        return repository.save(entity).map(this::toEntity);
+    }
+
+    @Override
+    public Flux<Solicitud> obtenerSolicitudesAprobadasPorUsuario(String email, String idEstado) {
+        return repository.findByEmailAndIdEstado(email, idEstado)
+                .map(this::toEntity);
     }
 
 

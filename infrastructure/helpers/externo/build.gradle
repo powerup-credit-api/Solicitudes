@@ -1,6 +1,7 @@
 dependencies {
     implementation project(':model')
     implementation project(':reactive-web')
+    implementation project(':usecase')
     implementation 'org.springframework:spring-context'
     implementation "software.amazon.awssdk:sqs:2.20.150"
     implementation 'com.fasterxml.jackson.core:jackson-databind'
