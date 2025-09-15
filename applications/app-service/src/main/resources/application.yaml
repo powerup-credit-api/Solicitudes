@@ -26,6 +26,7 @@ aws:
     email: ${AWS_SQS_EMAIL:https://sqs.us-east-2.amazonaws.com/925323749763/SolicitudDecididaQueue}
     validacion: ${AWS_SQS_VALIDACION:https://sqs.us-east-2.amazonaws.com/925323749763/PeticionCapacidadDeEndeudamientoQueue}
     respuesta: ${AWS_SQS_RESPUESTA:https://sqs.us-east-2.amazonaws.com/925323749763/respuestaCapacidadEndeudamientoQueue}
+    solicitud-aprobada: ${AWS_SQS_SOLICITUD_APROBADA:https://sqs.us-east-2.amazonaws.com/925323749763/SolicitudAprobadaQueue}
 external:
   api:
     usuario:

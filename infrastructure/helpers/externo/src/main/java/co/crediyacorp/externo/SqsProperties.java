@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record SqsProperties(
         String email,
         String validacion,
-        String respuesta
+        String respuesta,
+        String solicitudAprobada
 ) {
 }
