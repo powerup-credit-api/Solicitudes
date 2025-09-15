@@ -13,7 +13,6 @@ import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 
-import java.time.Duration;
 
 @Component
 @RequiredArgsConstructor

@@ -1,7 +1,9 @@
 package co.crediyacorp.usecase.crearsolicitud.usecases;
 
 import co.crediyacorp.model.estado.gateways.EstadoRepository;
+import co.crediyacorp.model.external_services.utils.DomainEventPublisher;
 import co.crediyacorp.model.solicitud.Solicitud;
+import co.crediyacorp.model.solicitud.SolicitudAprobadaEvent;
 import co.crediyacorp.model.solicitud.SolicitudPendienteDto;
 import co.crediyacorp.model.solicitud.gateways.SolicitudRepository;
 import co.crediyacorp.model.excepciones.ValidationException;
@@ -29,6 +31,7 @@ public class SolicitudUseCase {
     private final TipoPrestamoRepository tipoPrestamoRepository;
     private final UsuarioExternalApiPortUseCase usuarioExternalApiPortUseCase;
     private final SolicitudMapperUseCase solicitudMapper;
+    private final DomainEventPublisher domainEventPublisher;
 
 
     public Mono<Solicitud> crearSolicitud(Solicitud solicitud) {
@@ -112,6 +115,12 @@ public class SolicitudUseCase {
                                     .build();
                             return solicitudRepository.actualizarSolicitud(nuevaSolicitud);
                         }
+                )
+                .flatMap(actualizada ->
+                        "APROBADO".equalsIgnoreCase(nuevoEstado)
+                                ? domainEventPublisher.publishSolicitudAprobada(SolicitudAprobadaEvent.from(actualizada))
+                                .thenReturn(actualizada)
+                                : Mono.just(actualizada)
                 )
                 .doOnSuccess(solicitudActualizada -> log.info("Solicitud con ID " + idSolicitud + " actualizada al estado " + nuevoEstado))
                 .doOnError(e -> log.severe("Error al actualizar el estado de la solicitud con ID " + idSolicitud + ": " + e.getMessage()));

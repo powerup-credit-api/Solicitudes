@@ -1,6 +1,8 @@
 package co.crediyacorp.externo;
 
 import co.crediyacorp.model.external_services.ExternalPusbliser;
+import co.crediyacorp.model.external_services.utils.DomainEventPublisher;
+import co.crediyacorp.model.solicitud.SolicitudAprobadaEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -12,7 +14,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 @RequiredArgsConstructor
 @Component
-public class ExternaPublisherImpl implements ExternalPusbliser {
+public class ExternaPublisherImpl implements ExternalPusbliser, DomainEventPublisher {
 
     private final SqsClient sqsClient;
     private final ObjectMapper objectMapper;
@@ -44,5 +46,11 @@ public class ExternaPublisherImpl implements ExternalPusbliser {
     @Override
     public Mono<Void> enviarValidacionAutomatica(Object evento) {
         return enviar(evento, sqsProperties.validacion());
+    }
+
+    @Override
+    public Mono<Void> publishSolicitudAprobada(SolicitudAprobadaEvent event) {
+        return enviar(event, sqsProperties.solicitudAprobada());
+
     }
 }
