@@ -2,6 +2,7 @@ package co.crediyacorp.api.mappers;
 
 import co.crediyacorp.api.dtos.RespuestaDto;
 
+import co.crediyacorp.api.dtos.SolicitudAprobadaDto;
 import co.crediyacorp.api.dtos.SolicitudEntradaDto;
 import co.crediyacorp.api.dtos.ValidacionAutomaticaSalidaDto;
 import co.crediyacorp.model.estado.gateways.EstadoRepository;
@@ -10,6 +11,7 @@ import co.crediyacorp.model.tipoprestamo.gateways.TipoPrestamoRepository;
 import co.crediyacorp.model.excepciones.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -58,27 +60,50 @@ public class SolicitudMapper {
         ));
     }
 
-    public Mono<ValidacionAutomaticaSalidaDto> toValidacionAutomaticaSalidaDto(Solicitud solicitud, List<Solicitud> solicitudesAprobadas, BigDecimal salarioBase) {
+    public Mono<ValidacionAutomaticaSalidaDto> toValidacionAutomaticaSalidaDto(
+            Solicitud solicitud,
+            List<Solicitud> solicitudesAprobadas,
+            BigDecimal salarioBase) {
+
         return Mono.zip(
                         tipoPrestamoRepository.obtenerTasaInteresPorIdTipoPrestamo(solicitud.getIdTipoPrestamo()),
                         tipoPrestamoRepository.obtenerNombreTipoPrestamoPorId(solicitud.getIdTipoPrestamo()))
-                        .map(tuple -> {
-                                    String nombreTipoPrestamo = tuple.getT2();
-                                    BigDecimal tasaInteres = tuple.getT1();
+                .flatMap(tuple -> {
+                    BigDecimal tasaInteres = tuple.getT1();
+                    String nombreTipoPrestamo = tuple.getT2();
 
-                                    return new ValidacionAutomaticaSalidaDto(
-                                            solicitud.getIdSolicitud(),
-                                            solicitud.getDocumentoIdentidad(),
-                                            solicitud.getEmail(),
-                                            solicitud.getMonto(),
-                                            solicitud.getPlazo(),
-                                            nombreTipoPrestamo,
-                                            tasaInteres,
-                                            salarioBase,
-                                            solicitudesAprobadas);
-                        });
+                    return Flux.fromIterable(solicitudesAprobadas)
+                            .flatMap(this::toSolicitudAprobadaDto)
+                            .collectList()
+                            .map(aprobadasConTasa -> new ValidacionAutomaticaSalidaDto(
+                                    solicitud.getIdSolicitud(),
+                                    solicitud.getDocumentoIdentidad(),
+                                    solicitud.getEmail(),
+                                    solicitud.getMonto(),
+                                    solicitud.getPlazo(),
+                                    nombreTipoPrestamo,
+                                    tasaInteres,
+                                    salarioBase,
+                                    aprobadasConTasa
+                            ));
+                });
     }
 
 
+
+    private Mono<SolicitudAprobadaDto> toSolicitudAprobadaDto(Solicitud solicitud) {
+        return tipoPrestamoRepository
+                .obtenerTasaInteresPorIdTipoPrestamo(solicitud.getIdTipoPrestamo())
+                .map(tasa -> new SolicitudAprobadaDto(
+                        solicitud.getIdSolicitud(),
+                        solicitud.getMonto(),
+                        solicitud.getPlazo(),
+                        tasa
+                ));
     }
+
+
+
+
+}
 
