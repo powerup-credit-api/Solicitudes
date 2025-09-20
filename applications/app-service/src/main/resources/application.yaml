@@ -21,6 +21,11 @@ routes:
   paths:
     solicitud: "/api/v1/solicitud"
 
+security:
+  jwt:
+    secret: ${JWT_SECRET:my-super-secret-key-1234567890abcdef}
+    expiration: ${JWT_EXPIRATION:3600000}
+
 aws:
   sqs:
     email: ${AWS_SQS_EMAIL:https://sqs.us-east-2.amazonaws.com/925323749763/SolicitudDecididaQueue}
@@ -30,7 +35,7 @@ aws:
 external:
   api:
     usuario:
-      base-url: "${USUARIO_API_URL:http://localhost:8082}"
+      base-url: "${USUARIO_API_URL:http://localhost:8080}"
 
 
   profiles:
@@ -44,6 +49,11 @@ management:
     health:
       probes:
         enabled: true
+  health:
+    db:
+      enabled: false
+    r2dbc:
+      enabled: false
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
 
