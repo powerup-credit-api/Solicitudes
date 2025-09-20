@@ -30,7 +30,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
-                                "/swagger-ui/index.html").permitAll()
+                                "/swagger-ui/index.html",
+                                "/actuator/health").permitAll()
                         .pathMatchers(HttpMethod.POST,"/api/v1/solicitud").hasAnyRole("ADMINISTRADOR", "SOLICITANTE","ASESOR")
                         .pathMatchers(HttpMethod.GET,"/api/v1/solicitud").hasAnyRole("ADMINISTRADOR", "ASESOR")
                         .pathMatchers(HttpMethod.PUT,"/api/v1/solicitud").hasAnyRole( "ADMINISTRADOR", "ASESOR")
