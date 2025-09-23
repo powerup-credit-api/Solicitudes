@@ -29,8 +29,7 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 
 
-
-import java.util.Objects;
+import java.security.Principal;
 
 
 @Component
@@ -96,10 +95,17 @@ public class Handler {
 
 
     private Mono<SolicitudEntradaDto> validarEmailHeader(ServerRequest request, SolicitudEntradaDto dto) {
-        return Objects.equals(request.headers().firstHeader("X-USER-SUBJECT"), dto.email())
-                ? Mono.just(dto)
-                : Mono.error(new ValidationException("El email no coincide con el usuario autenticado"));
+        return request.principal()
+                .map(Principal::getName)
+                .flatMap(email -> {
+                    if (!email.equals(dto.email())) {
+                        return Mono.error(new ValidationException("El email del token no coincide con el del body"));
+                    }
+                    return Mono.just(dto);
+                });
     }
+
+
 
     private Mono<SolicitudEntradaDto> validarUsuario(SolicitudEntradaDto dto) {
         return usuarioExternalApiPortUseCase.validarUsuario(dto.email(), dto.documentoIdentidad())
