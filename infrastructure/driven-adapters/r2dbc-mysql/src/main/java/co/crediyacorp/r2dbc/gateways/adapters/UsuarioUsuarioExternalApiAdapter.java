@@ -24,6 +24,8 @@ public class UsuarioUsuarioExternalApiAdapter implements UsuarioExternalApiPort 
     @Value("${external.api.usuario.base-url}")
     private String baseUrl ;
 
+    private static final String SERVICIO = "autenticacion";
+
 
 
     public UsuarioUsuarioExternalApiAdapter(WebClient.Builder webClientBuilder, JwtProvider jwtProvider) {
@@ -44,6 +46,7 @@ public class UsuarioUsuarioExternalApiAdapter implements UsuarioExternalApiPort 
                                 .queryParam("documentoIdentidad", documentoIdentidad)
                                 .build())
                         .header("Authorization", "Bearer " + token)
+                        .header("servicio", SERVICIO)
                         .retrieve()
                         .onStatus(HttpStatusCode::isError, clientResponse ->
                                 clientResponse.bodyToMono(String.class)
@@ -64,6 +67,7 @@ public class UsuarioUsuarioExternalApiAdapter implements UsuarioExternalApiPort 
                         .post()
                         .uri("/api/v1/salario")
                         .header("Authorization", "Bearer " + token)
+                        .header("servicio", SERVICIO)
                         .bodyValue(emails)
                         .retrieve()
                         .onStatus(HttpStatusCode::isError, clientResponse ->
@@ -88,6 +92,7 @@ public class UsuarioUsuarioExternalApiAdapter implements UsuarioExternalApiPort 
                                 .queryParam("email", email)
                                 .build())
                         .header("Authorization", "Bearer " + token)
+                        .header("servicio", SERVICIO)
                         .retrieve()
                         .onStatus(HttpStatusCode::isError, clientResponse ->
                                 clientResponse.bodyToMono(String.class)
